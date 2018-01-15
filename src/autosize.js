@@ -89,11 +89,15 @@ function assign(ta) {
 		const arr = [];
 
 		while (el && el.parentNode && el.parentNode instanceof Element) {
-			if (el.parentNode.scrollTop) {
+			var scrollTop = el.parentNode.scrollTop;
+			if(el.parentNode === document.body){
+				scrollTop = document.documentElement.scrollTop;
+			}
+			if (scrollTop) {
 				arr.push({
 					node: el.parentNode,
-					scrollTop: el.parentNode.scrollTop,
-				})
+					scrollTop: scrollTop
+				});
 			}
 			el = el.parentNode;
 		}
@@ -103,8 +107,7 @@ function assign(ta) {
 
 	function resize() {
 		const originalHeight = ta.style.height;
-		// const overflows = getParentOverflows(ta);
-		const docTop = document.documentElement && document.documentElement.scrollTop; // Needed for Mobile IE (ticket #240)
+		const overflows = getParentOverflows(ta);
 
 		ta.style.height = '';
 
@@ -121,17 +124,10 @@ function assign(ta) {
 		// used to check if an update is actually necessary on window.resize
 		clientWidth = ta.clientWidth;
 
-        // Disable scrollTop set because it causes scroll jumps on mobile safari
-        // where body.scrollTop > 0 when keyboard is opened.
-        //
 		// prevents scroll-position jumping
-		// overflows.forEach(el => {
-		// 	el.node.scrollTop = el.scrollTop
-		// });
-
-		if (docTop) {
-			document.documentElement.scrollTop = docTop;
-		}
+		overflows.forEach(el => {
+			el.node.scrollTop = el.scrollTop
+		});
 	}
 
 	function update() {
