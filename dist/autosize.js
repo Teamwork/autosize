@@ -77,6 +77,8 @@
 
 			if (style.boxSizing === 'content-box') {
 				heightOffset = -(parseFloat(style.paddingTop) + parseFloat(style.paddingBottom));
+			} else if (style.boxSizing === 'border-box') {
+				heightOffset = -(parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth));
 			} else {
 				heightOffset = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
 			}
@@ -109,10 +111,14 @@
 			var arr = [];
 
 			while (el && el.parentNode && el.parentNode instanceof Element) {
-				if (el.parentNode.scrollTop) {
+				var scrollTop = el.parentNode.scrollTop;
+				if (el.parentNode === document.body) {
+					scrollTop = document.documentElement.scrollTop;
+				}
+				if (scrollTop) {
 					arr.push({
 						node: el.parentNode,
-						scrollTop: el.parentNode.scrollTop
+						scrollTop: scrollTop
 					});
 				}
 				el = el.parentNode;
@@ -124,7 +130,6 @@
 		function resize() {
 			var originalHeight = ta.style.height;
 			var overflows = getParentOverflows(ta);
-			var docTop = document.documentElement && document.documentElement.scrollTop; // Needed for Mobile IE (ticket #240)
 
 			ta.style.height = '';
 
@@ -143,12 +148,12 @@
 
 			// prevents scroll-position jumping
 			overflows.forEach(function (el) {
-				el.node.scrollTop = el.scrollTop;
+				if (el.node === document.body) {
+					document.documentElement.scrollTop = el.scrollTop;
+				} else {
+					el.node.scrollTop = el.scrollTop;
+				}
 			});
-
-			if (docTop) {
-				document.documentElement.scrollTop = docTop;
-			}
 		}
 
 		function update() {
