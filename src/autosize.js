@@ -126,7 +126,11 @@ function assign(ta) {
 
 		// prevents scroll-position jumping
 		overflows.forEach(el => {
-			el.node.scrollTop = el.scrollTop
+			if(el.node === document.body){
+				document.documentElement.scrollTop = el.scrollTop;
+			} else {
+				el.node.scrollTop = el.scrollTop
+			}
 		});
 	}
 
