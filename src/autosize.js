@@ -55,6 +55,8 @@ function assign(ta) {
 
 		if (style.boxSizing === 'content-box') {
 			heightOffset = -(parseFloat(style.paddingTop)+parseFloat(style.paddingBottom));
+		} else if (style.boxSizing === 'border-box') {
+			heightOffset = -(parseFloat(style.borderTopWidth)+parseFloat(style.borderBottomWidth));
 		} else {
 			heightOffset = parseFloat(style.borderTopWidth)+parseFloat(style.borderBottomWidth);
 		}
@@ -87,11 +89,15 @@ function assign(ta) {
 		const arr = [];
 
 		while (el && el.parentNode && el.parentNode instanceof Element) {
-			if (el.parentNode.scrollTop) {
+			var scrollTop = el.parentNode.scrollTop;
+			if(el.parentNode === document.body){
+				scrollTop = document.documentElement.scrollTop;
+			}
+			if (scrollTop) {
 				arr.push({
 					node: el.parentNode,
-					scrollTop: el.parentNode.scrollTop,
-				})
+					scrollTop: scrollTop
+				});
 			}
 			el = el.parentNode;
 		}
@@ -102,7 +108,6 @@ function assign(ta) {
 	function resize() {
 		const originalHeight = ta.style.height;
 		const overflows = getParentOverflows(ta);
-		const docTop = document.documentElement && document.documentElement.scrollTop; // Needed for Mobile IE (ticket #240)
 
 		ta.style.height = '';
 
@@ -121,12 +126,12 @@ function assign(ta) {
 
 		// prevents scroll-position jumping
 		overflows.forEach(el => {
-			el.node.scrollTop = el.scrollTop
+			if(el.node === document.body){
+				document.documentElement.scrollTop = el.scrollTop;
+			} else {
+				el.node.scrollTop = el.scrollTop
+			}
 		});
-
-		if (docTop) {
-			document.documentElement.scrollTop = docTop;
-		}
 	}
 
 	function update() {
@@ -138,7 +143,7 @@ function assign(ta) {
 		// Using offsetHeight as a replacement for computed.height in IE, because IE does not account use of border-box
 		var actualHeight = computed.boxSizing === 'content-box' ? Math.round(parseFloat(computed.height)) : ta.offsetHeight;
 
-		// The actual height not matching the style height (set via the resize method) indicates that 
+		// The actual height not matching the style height (set via the resize method) indicates that
 		// the max-height has been exceeded, in which case the overflow should be allowed.
 		if (actualHeight !== styleHeight) {
 			if (computed.overflowY === 'hidden') {
